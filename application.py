@@ -139,9 +139,9 @@ def getPic(matchups_list,week):
     league = League(league_id=league_id,year=year)
     matchups = str(league.scoreboard(week)).replace("Matchup","").replace("Team","").replace("(","").replace(")),","*").replace(")","").replace("[","").replace("]","").split("*")
 
-    team_dict = pd.read_excel("data/nba-2022-EasternStandardTime.xlsx",sheet_name='Sheet1')
+    team_dict = pd.read_csv("data/abr.csv")
     team_dict = team_dict.set_index('Teams').to_dict()['Abr']
-    schedule = pd.read_excel("data/nba-2022-EasternStandardTime.xlsx",sheet_name='in')
+    schedule = pd.read_csv("data/nba-2022-EasternStandardTime.csv")
     schedule = schedule.replace(team_dict)
 
     week = int(week)
