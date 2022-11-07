@@ -10,6 +10,7 @@ import dash_bootstrap_components as dbc
 import dash_table
 import pickle
 import dash_loading_spinners as dls
+import numpy as np
 
 
 year = 2023
@@ -190,8 +191,7 @@ def getPic(matchups_list,week):
         if date_filter.empty:
             if not name_filter.empty:
                 tm = name_filter.index.get_level_values('Tm').values[0]
-                #mean_points = np.mean(name_filter['FPoints'])
-                mean_points = 0
+                mean_points = np.mean(name_filter['FPoints'])
                 predicted_home = mean_points*games_this_week[tm]
             else:
                 predicted_home=0
@@ -206,8 +206,7 @@ def getPic(matchups_list,week):
         if date_filter.empty:
             if not name_filter.empty:
                 tm = name_filter.index.get_level_values('Tm').values[0]
-                #mean_points = np.mean(name_filter['FPoints'])
-                mean_points = 0
+                mean_points = np.mean(name_filter['FPoints'])
                 predicted_away = mean_points*games_this_week[tm]
             else:
                 predicted_away=0
@@ -216,10 +215,13 @@ def getPic(matchups_list,week):
             predicted_away = model_gp.predict(date_filter).round(0).values[0]
 
         if datetime.today()<start_date:
-            df2 = df2.append({'Home Team':str(home_players[i]).split(',')[0].split('(')[1],'Home Score':str(0.0),'Home Predicted Score':round(predicted_home,2),'Away Team':str(away_players[i]).split(',')[0].split('(')[1],'Away Score':str(0.0),'Away Predicted Score':round(predicted_away,2)},ignore_index=True)
+            if use_last_weeks_lineup:
+                df2 = df2.append({'Home Team':str(home_players[i]).split(',')[0].split('(')[1][:-1],'Home Score':str(0.0),'Home Predicted Score':round(predicted_home,2),'Away Team':str(away_players[i]).split(',')[0].split('(')[1][:-1],'Away Score':str(0.0),'Away Predicted Score':round(predicted_away,2)},ignore_index=True)
+            else:
+                df2 = df2.append({'Home Team':str(home_players[i]).split(',')[0].split('(')[1],'Home Score':str(0.0),'Home Predicted Score':round(predicted_home,2),'Away Team':str(away_players[i]).split(',')[0].split('(')[1],'Away Score':str(0.0),'Away Predicted Score':round(predicted_away,2)},ignore_index=True)
         else:
             if use_last_weeks_lineup:
-                df2 = df2.append({'Home Team':str(home_players[i]).split(',')[0].split('(')[1],'Home Score':str(0.0),'Home Predicted Score':round(predicted_home,2),'Away Team':str(away_players[i]).split(',')[0].split('(')[1],'Away Score':str(0.0),'Away Predicted Score':round(predicted_away,2)},ignore_index=True)
+                df2 = df2.append({'Home Team':str(home_players[i]).split(',')[0].split('(')[1][:-1],'Home Score':str(0.0),'Home Predicted Score':round(predicted_home,2),'Away Team':str(away_players[i]).split(',')[0].split('(')[1][:-1],'Away Score':str(0.0),'Away Predicted Score':round(predicted_away,2)},ignore_index=True)
             else:
                 df2 = df2.append({'Home Team':str(home_players[i]).split(',')[0].split('(')[1],'Home Score':str(home_players[i]).split(',')[1].split(':')[1][:-1],'Home Predicted Score':round(predicted_home,2),'Away Team':str(away_players[i]).split(',')[0].split('(')[1],'Away Score':str(away_players[i]).split(',')[1].split(':')[1][:-1],'Away Predicted Score':round(predicted_away,2)},ignore_index=True)
 
