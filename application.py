@@ -171,15 +171,21 @@ def getPic(matchups_list,week):
             use_last_weeks_lineup = 0
     else:
         use_last_weeks_lineup=0
-
-    away_players = league.box_scores(week-use_last_weeks_lineup)[matchup].away_lineup
-    home_players = league.box_scores(week-use_last_weeks_lineup)[matchup].home_lineup
+    if use_last_weeks_lineup:
+        away_players = away_team.roster
+        home_players = home_team.roster
+    else:
+        away_players = league.box_scores(week-use_last_weeks_lineup)[matchup].away_lineup
+        home_players = league.box_scores(week-use_last_weeks_lineup)[matchup].home_lineup
     if use_last_weeks_lineup:
         df2 = pd.DataFrame(data=[[str(home_team).split("(")[1][:-1],0,0,str(away_team).split("(")[1][:-1],0,0]],columns=['Home Team','Home Score','Home Predicted Score','Away Team','Away Score','Away Predicted Score'])
     else:
         df2 = pd.DataFrame(data=[[str(home_team).split("(")[1][:-1],home_score,0,str(away_team).split("(")[1][:-1],away_score,0]],columns=['Home Team','Home Score','Home Predicted Score','Away Team','Away Score','Away Predicted Score'])
     for i in range(min(len(home_players),len(away_players))):
-        name_filter = X_test[X_test.index.get_level_values("Name")==str(home_players[i]).split(',')[0].split('(')[1]+'  ']
+        if use_last_weeks_lineup:
+            name_filter = X_test[X_test.index.get_level_values("Name")==str(home_players[i]).split(',')[0].split('(')[1][:-1]+'  ']
+        else:
+            name_filter = X_test[X_test.index.get_level_values("Name")==str(home_players[i]).split(',')[0].split('(')[1]+'  ']
         date_filter = name_filter[name_filter.index.get_level_values("Week")==float(week)-2]
         if date_filter.empty:
             if not name_filter.empty:
@@ -192,7 +198,10 @@ def getPic(matchups_list,week):
         else:
             date_filter['Games_next_week']=games_this_week[name_filter.index.get_level_values('Tm').values[0]]
             predicted_home = model_gp.predict(date_filter).round(0).values[0]
-        name_filter = X_test[X_test.index.get_level_values("Name")==str(away_players[i]).split(',')[0].split('(')[1]+'  ']
+        if use_last_weeks_lineup:
+            name_filter = X_test[X_test.index.get_level_values("Name")==str(away_players[i]).split(',')[0].split('(')[1][:-1]+'  ']
+        else:
+            name_filter = X_test[X_test.index.get_level_values("Name")==str(away_players[i]).split(',')[0].split('(')[1]+'  ']
         date_filter = name_filter[name_filter.index.get_level_values("Week")==float(week)-2]
         if date_filter.empty:
             if not name_filter.empty:
