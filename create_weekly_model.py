@@ -131,6 +131,9 @@ y_df = pd.DataFrame(y.set_index(["Name","Week","Tm"])).sort_index(level="Name")
 X_df = X_df.sort_index(level="Name")
 X_df['Games_next_week'] = y_df['Games']
 y_df = y_df.drop(['Games'],axis=1)
+X_df = X_df[X_df.index.isin(y_df.index)]
+y_df = y_df[y_df.index.isin(X_df.index)]
+X_df = X_df[~X_df.index.duplicated(keep='first')]
 
 
 
@@ -142,18 +145,18 @@ labels = kmeans.fit_predict(X_df)
 #assign labels to data points
 X_df['Cluster'] = labels
 X_df = pd.get_dummies(X_df['Cluster']).join(X_df).drop(['Cluster'],axis=1)
-X_df = X_df[X_df.index.isin(y_df.index)]
-y_df = y_df[y_df.index.isin(X_df.index)]
+# X_df = X_df[X_df.index.isin(y_df.index)]
+# y_df = y_df[y_df.index.isin(X_df.index)]
 
-
-X_df.to_csv('data/X_df.csv')
-y_df.to_csv('data/y_df.csv')
+if year ==2023:
+    X_df.to_csv('data/X_df.csv')
+    y_df.to_csv('data/y_df.csv')
 
 if not get_current_data:
     model = sm.GLM(y_df,X_df,family=sm.families.Poisson()).fit()
-    pickle.dump(model, open('models/OLS_weekly_model_fp.sav', 'wb'))
+    pickle.dump(model, open('models/OLS_weekly_model_fp_final.sav', 'wb'))
 
-    model_gp = pickle.load(open('models/OLS_weekly_model_fp.sav', 'rb'))
+    model_gp = pickle.load(open('models/OLS_weekly_model_fp_final.sav', 'rb'))
 
     y_hat = model_gp.predict(X_df)
 

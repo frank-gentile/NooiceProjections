@@ -10,7 +10,6 @@ import dash_bootstrap_components as dbc
 import dash_table
 import pickle
 import dash_loading_spinners as dls
-import numpy as np
 
 
 year = 2023
@@ -185,7 +184,8 @@ def getPic(matchups_list,week):
         if date_filter.empty:
             if not name_filter.empty:
                 tm = name_filter.index.get_level_values('Tm').values[0]
-                mean_points = np.mean(name_filter['FPoints'])
+                #mean_points = np.mean(name_filter['FPoints'])
+                mean_points = 0
                 predicted_home = mean_points*games_this_week[tm]
             else:
                 predicted_home=0
@@ -197,7 +197,8 @@ def getPic(matchups_list,week):
         if date_filter.empty:
             if not name_filter.empty:
                 tm = name_filter.index.get_level_values('Tm').values[0]
-                mean_points = np.mean(name_filter['FPoints'])
+                #mean_points = np.mean(name_filter['FPoints'])
+                mean_points = 0
                 predicted_away = mean_points*games_this_week[tm]
             else:
                 predicted_away=0
