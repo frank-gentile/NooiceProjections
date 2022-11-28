@@ -4,6 +4,7 @@ import pandas as pd
 import bs4 as bs
 from scipy.stats import ttest_ind
 from espn_api.basketball import League
+import random
 
 def formatLinks(player_names,year):
     links = []
@@ -66,6 +67,10 @@ def formatLinks(player_names,year):
 
 
 def getPlayerData(link):
+    # user_agent = random.choice(user_agent_list)
+    # headers= {'User-Agent': user_agent, "Accept-Language": "en-US, en;q=0.5"}
+    # proxy = random.choice(proxies)
+    # response = get("your url", headers=headers, proxies=proxy)
     resp = requests.get(link)
     soup = bs.BeautifulSoup(resp.content,'lxml')
     tables = soup.findAll('table')

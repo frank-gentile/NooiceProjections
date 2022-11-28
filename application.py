@@ -11,12 +11,14 @@ import dash_table
 import pickle
 import dash_loading_spinners as dls
 import numpy as np
+import create_plot
+import plotly.express as px
+import data_m
 
 
-year = 2023
-league_id = 18927521
 
-league = League(league_id=league_id,year=year)
+end_df = pd.read_csv('data/data2.csv')
+
 #model = pickle.load(open('OLS_model.sav', 'rb'))
 
 model_gp = pickle.load(open('models/OLS_weekly_model_fp_final.sav', 'rb'))
@@ -24,6 +26,8 @@ model_gp = pickle.load(open('models/OLS_weekly_model_fp_final.sav', 'rb'))
 X_test = pd.read_csv('data/X_df.csv').set_index(["Name",'Week',"Tm"])
 y_df = pd.read_csv('data/y_df.csv').set_index(['Name','Week',"Tm"])
 
+animations = {'Scatter':px.scatter(end_df,x='FP_avg',y='mins_avg',color='team',animation_frame='G',size='Points accumulated',range_y=[10,48],range_x=[0,50],hover_name='Name', size_max=45
+),'Bar':px.bar(end_df,x='team',y='Points accumulated',color='team',animation_frame='G',animation_group='Name',hover_name='Name',range_y=[0,5000])}
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LITERA])
@@ -35,6 +39,11 @@ app.layout = dbc.Container([
         html.Br(),
         dbc.Row(dbc.Col(html.H1("Nooice Forecasting Tool (NFT)"),width={'size':'auto'}),align='center',justify='center'),
         html.Br(),
+        html.Label('League ID = '),
+        dcc.Input(id='league_id',value=18927521),
+        html.Br(),
+        html.Label('Year = '),
+        dcc.Input(id='year',value=2023),
         dcc.Tabs([dcc.Tab(label='Fantasy Projections', children = [
             dbc.Row(dbc.Col(html.H6(
             '''Projections below are from a model trained on 2021 NBA data and forecasted using previous weeks stats.
@@ -80,9 +89,66 @@ app.layout = dbc.Container([
         html.Br(),
 
         ]), 
-        dcc.Tab(label='Individual Projections', children = [
+        dcc.Tab(label='League Analysis', children = [
             html.Br(),
-            html.Label("Coming Soon!")
+    #dbc.Button('Update player data', id='submit-val', n_clicks=0,color='primary'),
+        html.P('''The following graph contains player level fantasy data, showing the average fantasy points per game against minutes per game over time, with 
+        the size of the points indicating the total fantasy points accumulated. '''),
+        html.P("Select an animation:"),
+        dcc.RadioItems(
+            id='selection',
+            options=[{'label': x, 'value': x} for x in animations],
+            value='Scatter'
+        ),
+        dcc.Graph(id="graph"),
+        html.P('''This Violin Plot shows the normalized distribution of weekly scores. 'Normalized' meaning your score for the week minus the 
+        average score of your opponents. Wider violins indicate greater frequency of the range, while thinner violins greater variation in scores.
+        Points on each plot are considered outliers'''),
+        dcc.Graph(id="violin"),
+        html.P('''This 'Luck Plot' describes the normalized 'points for' vs normalized 'points against' Each quadrant qualifies wins and losses
+        as 'lucky' or 'unlucky' and 'good' or 'bad' '''),
+        dcc.Graph(id="luck"),
+        html.P('''This heatmap describes the p-value associated with a simple t-test with the null nypothesis that team2 > team1. For example, 
+        if the underlying p-value is <0.05 you can safely reject the null and imply that team1 is better than team2. '''),   
+        dcc.Graph(id="heat"),
+        html.P('''Presented by Frunk Analytics LLC'''),   
+
+        ])
+    ])])
+@app.callback(
+    [Output("graph", "figure"),
+    Output("violin", "figure"),
+    Output("luck", "figure"),
+    Output("heat","figure")], 
+    [Input("selection", "value"),
+     Input("league_id","value"),
+     Input('year','value')])
+def display_animated_graph(s,league_id,year):
+    league = League(league_id=league_id,year=year)
+
+    if league_id == 18927521:
+        df = pd.read_csv('data/df_analytics.csv')
+        df_against = pd.read_csv('data/df_against_analytics.csv')
+        df_joined = pd.read_csv('data/df_joined_analytics.csv')
+        df_p = pd.read_csv('data/df_p_analytics.csv')
+    else:
+        scores = dict()
+        scores_against = dict()
+
+        scores, scores_against = data_m.findScores(league,scores,scores_against)
+
+        df, df_against, df_joined = data_m.createDataFrame(scores,scores_against)
+        df_p = data_m.CreatePValues(df_joined)
+        
+    fig = create_plot.getLuckSkillPlot(df,df_against)
+
+    violin_fig = create_plot.getViolinPlots(df)
+
+    heat_map = create_plot.PlotlyHeatmap(df_p)
+
+
+    return animations[s], violin_fig, fig, heat_map
+
             # html.Br(),
             # dbc.Row([
             #     dbc.Col(
@@ -111,16 +177,14 @@ app.layout = dbc.Container([
 
                 
   
-        ]
-
-        )
- ])
-])
 
     
 @app.callback([Output('matchups_list','options')],
-                [Input('week','value')])
-def update_matchup_list(week):
+                [Input('week','value'),
+                 Input('league_id','value'),
+                 Input('year','value')])
+def update_matchup_list(week,league_id,year):
+    league = League(league_id=league_id,year=year)
     matchup_list = str(league.scoreboard(week)).replace("Matchup","").replace("Team","").replace("(","").replace(")),","*").replace(")","").replace("[","").replace("]","").split("*")
     return [[{'label': i, 'value': i} for i in matchup_list]]
 @app.callback([Output('matchups_list','value')],
@@ -133,9 +197,10 @@ def set_matchup_list(matchup):
                Output("update_table", "children"),
                ],
       [Input('matchups_list','value'),
-      Input('week','value')])
-def getPic(matchups_list,week):
-    league_id = 18927521
+      Input('week','value'),
+      Input('league_id','value'),
+      Input('year','value')])
+def getPic(matchups_list,week,league_id,year):
 
     league = League(league_id=league_id,year=year)
     matchups = str(league.scoreboard(week)).replace("Matchup","").replace("Team","").replace("(","").replace(")),","*").replace(")","").replace("[","").replace("]","").split("*")

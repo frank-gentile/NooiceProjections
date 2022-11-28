@@ -8,13 +8,14 @@ from datetime import datetime, date, timedelta
 from formattingFuncs import getPlayerData, getTeams, formatLinks,getPlayersFromTeam, getFantasyPoints
 from retrieveData import getPlayerDataAdv
 import numpy as np
+import time
 
 year = 2023
 week = 1
 #start_date = datetime(2021,10,18)
 start_date = datetime(2022,10,17)
 
-run_new_player_data = 0
+run_new_player_data = 1
 get_current_data =1
 
 
@@ -80,6 +81,7 @@ if run_new_player_data:
     y_df = pd.DataFrame()
     total_player_df_summed = pd.DataFrame()
     for link in links_list:
+        time.sleep(10)
         basic_player_data, pic = getPlayerData(link)
         if type(basic_player_data) == pd.core.frame.DataFrame:
             if not basic_player_data.empty:
@@ -206,4 +208,27 @@ def dropColumns(model,X,X_test,y,add_clusters):
     # X_test.to_csv('data/'+label+'.csv')
 
 #saveXtest(X_test_fp,'fp_weekly')
+import data_m
+from espn_api.basketball import League
 
+year = 2023
+league_id = 18927521
+
+league = League(league_id=league_id,year=year)
+
+scores = dict()
+scores_against = dict()
+
+scores, scores_against = data_m.findScores(league,scores,scores_against)
+
+df, df_against, df_joined = data_m.createDataFrame(scores,scores_against)
+
+
+df_p = data_m.CreatePValues(df_joined)
+
+df.to_csv('data/df_analytics.csv')
+df_against.to_csv('data/df_against_analytics.csv')
+df_joined.to_csv('data/df_joined_analytics.csv')
+df_p.to_csv('data/df_p_analytics.csv')
+
+# %%
