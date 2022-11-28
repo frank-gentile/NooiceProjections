@@ -44,6 +44,8 @@ app.layout = dbc.Container([
         html.Br(),
         html.Label('Year = '),
         dcc.Input(id='year',value=2023),
+        html.Br(),
+        dbc.Button('Update', id='submit-val', n_clicks=0,color='primary'),
         dcc.Tabs([dcc.Tab(label='Fantasy Projections', children = [
             dbc.Row(dbc.Col(html.H6(
             '''Projections below are from a model trained on 2021 NBA data and forecasted using previous weeks stats.
@@ -91,6 +93,7 @@ app.layout = dbc.Container([
         ]), 
         dcc.Tab(label='League Analysis', children = [
             html.Br(),
+            
     #dbc.Button('Update player data', id='submit-val', n_clicks=0,color='primary'),
         html.P('''The following graph contains player level fantasy data, showing the average fantasy points per game against minutes per game over time, with 
         the size of the points indicating the total fantasy points accumulated. '''),
@@ -120,13 +123,14 @@ app.layout = dbc.Container([
     Output("violin", "figure"),
     Output("luck", "figure"),
     Output("heat","figure")], 
-    [Input("selection", "value"),
-     Input("league_id","value"),
-     Input('year','value')])
-def display_animated_graph(s,league_id,year):
-    league = League(league_id=league_id,year=year)
+    [Input('submit-val','n_clicks'),
+     Input("selection", "value")
+     ],[State("league_id","value"),
+        State('year','value')])
+def display_animated_graph(n_clicks,s,league_id,year):
+    league = League(league_id=int(league_id),year=int(year))
 
-    if league_id == 18927521:
+    if league_id == 18927521 and year==2023:
         df = pd.read_csv('data/df_analytics.csv')
         df_against = pd.read_csv('data/df_against_analytics.csv')
         df_joined = pd.read_csv('data/df_joined_analytics.csv')
@@ -180,29 +184,33 @@ def display_animated_graph(s,league_id,year):
 
     
 @app.callback([Output('matchups_list','options')],
-                [Input('week','value'),
-                 Input('league_id','value'),
-                 Input('year','value')])
-def update_matchup_list(week,league_id,year):
-    league = League(league_id=league_id,year=year)
+                [Input('submit-val','n_clicks'),
+                 Input('week','value')
+                 ],[State("league_id","value"),
+                    State('year','value')])
+def update_matchup_list(n_clicks,week,league_id,year):
+    league = League(league_id=int(league_id),year=int(year))
     matchup_list = str(league.scoreboard(week)).replace("Matchup","").replace("Team","").replace("(","").replace(")),","*").replace(")","").replace("[","").replace("]","").split("*")
     return [[{'label': i, 'value': i} for i in matchup_list]]
 @app.callback([Output('matchups_list','value')],
-               [Input('matchups_list','options')])
-def set_matchup_list(matchup):
+               [Input('submit-val','n_clicks'),
+                Input('matchups_list','options')
+                ])
+def set_matchup_list(n_clicks,matchup):
     return [matchup[0]['value']]
 
 
 @app.callback([
                Output("update_table", "children"),
                ],
-      [Input('matchups_list','value'),
-      Input('week','value'),
-      Input('league_id','value'),
-      Input('year','value')])
-def getPic(matchups_list,week,league_id,year):
+      [Input('submit-val','n_clicks'),
+       Input('matchups_list','value'),
+      Input('week','value')
+      ],[State("league_id","value"),
+        State('year','value')])
+def getPic(n_clicks,matchups_list,week,league_id,year):
 
-    league = League(league_id=league_id,year=year)
+    league = League(league_id=int(league_id),year=int(year))
     matchups = str(league.scoreboard(week)).replace("Matchup","").replace("Team","").replace("(","").replace(")),","*").replace(")","").replace("[","").replace("]","").split("*")
 
     team_dict = pd.read_csv("data/abr.csv")
