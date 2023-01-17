@@ -61,7 +61,7 @@ app.layout = dbc.Container([
                 dcc.Dropdown(id='week',
                  options=[{'label': i, 'value': i} for i in range(2,18)],
                         multi=False,
-                        value=2,
+                        value=14,
                         style={'width': "60%"}
                         )]),
 
@@ -89,6 +89,9 @@ app.layout = dbc.Container([
 
         html.Br(),
         html.Br(),
+        dbc.Row(dbc.Col(dls.Hash(html.Div(id='update_table2'),color="#435278",
+                        speed_multiplier=2,
+                        size=100)),justify='center',align='center'),
 
         ]), 
         dcc.Tab(label='League Analysis', children = [
@@ -202,6 +205,7 @@ def set_matchup_list(n_clicks,matchup):
 
 @app.callback([
                Output("update_table", "children"),
+               Output("update_table2", "children"),
                ],
       [Input('submit-val','n_clicks'),
        Input('matchups_list','value'),
@@ -302,6 +306,22 @@ def getPic(n_clicks,matchups_list,week,league_id,year):
     df2['Away Predicted Score'][0] = df2['Away Predicted Score'][1:].sum().round(0)
 
     df2 = df2.astype(str)
+    
+    data = X_test.reset_index()
+    on_roster = pd.read_excel('data/players_from_rosters.xlsx')
+    data['Name']=data['Name'].str[:-2]
+    df4 = data[~data['Name'].isin(list(on_roster[0]))]
+    df4['Games_next_week']=games_this_week[df4['Tm']].values
+    df4 = df4.set_index(['Name','Week','Tm'])
+    df4['Predicted_FP']=model_gp.predict(df4).round(0).values
+    df4 = df4.reset_index()
+    df4['Score'] = round(df4['Games']*df4['FPoints'],2)
+    df4['Score'] = df4['Score'].shift(-1)
+    df4 = df4[df4['Week']==week-2]
+    df4 = df4[['Name','Games_next_week','Predicted_FP','Score']]
+    df4 = df4.sort_values(by='Predicted_FP',ascending=False)
+    df4 = df4.head(10)
+    df3 = df4.astype(str)
 
     table = html.Div(
         [
@@ -325,9 +345,31 @@ def getPic(n_clicks,matchups_list,week,league_id,year):
                                     'textAlign': 'center', },)
         ]
     )
+    table2 = html.Div(
+        [
+            dash_table.DataTable(
+                data=df3.to_dict("rows"),
+                columns=[{"id": x, "name": x} for x in df3.columns],
+                            style_table={'display': 'block', 'max-width': '600px', 'border': '2px grey',
+                                            },
+                                style_as_list_view=True,
+                                style_header={
+                                    'backgroundColor': '#e1e4eb',
+                                    'fontWeight': 'bold',
+                                    'align': 'center'
+                                },
+                                style_cell={
+                                    # all three widths are needed
+                                    'fontSize': '18', 'font-family': 'sans-serif', 'font-color': 'grey',
+                                    'minWidth': '30px', 'width': '300px', 'maxWidth': '600px',
+                                    'overflow': 'hidden',
+                                    'textOverflow': 'ellipsis',
+                                    'textAlign': 'center', },)
+        ]
+    )
 
 
-    return [table]
+    return [table],[table2]
 
 
 # @app.callback([

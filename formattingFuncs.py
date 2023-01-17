@@ -26,7 +26,7 @@ def formatLinks(player_names,year):
         if player_names in special4:
             links = 'https://www.basketball-reference.com/players/'+str(first_letter)+'/'+str(first_five)+str(first_two)+'04/gamelog/'+str(year)
         if player_names == "D'Angelo Russell":
-            links = 'https://www.basketball-reference.com/players/r/russeda01.html'
+            links = 'https://www.basketball-reference.com/players/r/russeda01/gamelog/'+str(year)
         if player_names in special3:
             links = 'https://www.basketball-reference.com/players/'+str(first_letter)+'/'+str(first_five)+str(first_two)+'03/gamelog/'+str(year)
         if player_names == "Clint Capela":
@@ -36,7 +36,7 @@ def formatLinks(player_names,year):
         if player_names in special5:
             links = 'https://www.basketball-reference.com/players/'+str(first_letter)+'/'+str(first_five)+str(first_two)+'05/gamelog/'+str(year)
         if player_names == 'O.G. Anunoby':
-            links = 'https://www.basketball-reference.com/players/a/anunobyog01/gamelog/'+str(year)
+            links = 'https://www.basketball-reference.com/players/a/anunoog01/gamelog/'+str(year)
     else:
         for player in player_names:
             first_name = player.split(" ")[0]
@@ -50,7 +50,7 @@ def formatLinks(player_names,year):
             if player in special4:
                 link = 'https://www.basketball-reference.com/players/'+str(first_letter)+'/'+str(first_five)+str(first_two)+'04/gamelog/'+str(year)
             if player == "D'Angelo Russell":
-                link = 'https://www.basketball-reference.com/players/r/russeda01.html'
+                link = 'https://www.basketball-reference.com/players/r/russeda01/gamelog/'+str(year)
             if player in special3:
                 link = 'https://www.basketball-reference.com/players/'+str(first_letter)+'/'+str(first_five)+str(first_two)+'03/gamelog/'+str(year)
             if player == "Clint Capela":
@@ -60,7 +60,7 @@ def formatLinks(player_names,year):
             if player in special5:
                 link = 'https://www.basketball-reference.com/players/'+str(first_letter)+'/'+str(first_five)+str(first_two)+'05/gamelog/'+str(year)
             if player == 'O.G. Anunoby':
-                link = 'https://www.basketball-reference.com/players/a/anunobyog01/gamelog/'+str(year)
+                link = 'https://www.basketball-reference.com/players/a/anunoog01/gamelog/'+str(year)
 
             links.append(link)
     return(links)
