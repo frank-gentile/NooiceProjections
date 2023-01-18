@@ -308,7 +308,7 @@ def getPic(n_clicks,matchups_list,week,league_id,year):
     df2 = df2.astype(str)
     
     data = X_test.reset_index()
-    on_roster = pd.read_excel('data/players_from_rosters.xlsx')
+    on_roster = pd.read_csv('data/players_from_rosters.csv')
     data['Name']=data['Name'].str[:-2]
     df4 = data[~data['Name'].isin(list(on_roster[0]))]
     df4['Games_next_week']=games_this_week[df4['Tm']].values
